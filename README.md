@@ -1,2 +1,2 @@
 # data-analysis
-This project is repository of stock trading strategy analysis of NSE stocks
+This is a repository of stock trading strategy analysis of NSE stocks
