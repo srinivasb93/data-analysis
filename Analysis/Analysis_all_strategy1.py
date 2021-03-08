@@ -18,13 +18,13 @@ pd.options.mode.chained_assignment = None
 plt.style.use('ggplot')
 start_time = dt.datetime.now()
 
-prices = pd.read_csv('Stock_Symbol.csv')
+prices = pd.read_csv('../Stock_Symbol.csv')
 # prices = pd.read_csv('Stock_Symbol_Nxt50.csv')
 # prices=pd.read_csv('Nifty_Midcap_50.csv')
 # prices=pd.read_csv('Nifty_Next_50.csv')
-stocks = prices['Symbol'].tolist()
-#stocks = ['MOTHERSUMI','BAJFINANCE','HDFCBANK','ASIANPAINT','RELAXO','SONATSOFTW','ICICIBANK','KOTAKBANK','RELIANCE','TITAN','HINDUNILVR','PIDILITIND','ITC','NESTLEIND','INFY','TCS']
-#stocks = ['MOTHERSUMI']
+#stocks = prices['Symbol'].tolist()
+stocks = ['MOTHERSUMI','BAJFINANCE','HDFCBANK','ASIANPAINT','RELAXO','SONATSOFTW','ICICIBANK','KOTAKBANK','RELIANCE','TITAN','HINDUNILVR','PIDILITIND','ITC','NESTLEIND','INFY','TCS']
+# stocks = ['INFY']
 # stocks = input("Enter the Stock symbol as in NSE : ")
 # ndays = input("Enter the no. of days for Data Analysis : ")
 fast = int(input("Enter the no.of days for Fast MA : "))
@@ -75,6 +75,48 @@ def atr(df, n=14):
     # atr = tr.rolling(n).mean()
     return round(atr,2)
 
+# def atr(df, n=14):
+#     data = df.copy()
+#     high = data['High']
+#     low = data['Low']
+#     close = data['Close']
+#     data['tr0'] = abs(high - low)
+#     data['tr1'] = abs(high - close.shift())
+#     data['tr2'] = abs(low - close.shift())
+#     tr = data[['tr0', 'tr1', 'tr2']].max(axis=1)
+#     atr = wwma(tr, n)
+#     # atr = tr.rolling(n).mean()
+#     atr_close = close - 2.5 * atr
+#     atr_close = atr_close.shift()
+#     data['ATR_U'] = atr_close
+#     atr_diff = atr_close - atr_close.shift()
+#     atr_close_down = close + 2.5 * atr
+#     atr_close_down = atr_close_down.shift()
+#     data['ATR_D'] = atr_close_down
+#     atr_diff_down = atr_close_down - atr_close_down.shift()
+#     sl_value = 0
+#     for i in range(1, len(data.index)):
+#         if data.loc[i, 'Close'] < sl_value and data.loc[i - 1, 'Close'] > sl_value:
+#             sl_value = atr_close_down[i]
+#             data.loc[i, 'TSL'] = sl_value
+#         elif data.loc[i, 'Close'] > sl_value and data.loc[i - 1, 'Close'] < sl_value:
+#             sl_value = atr_close[i]
+#             data.loc[i, 'TSL'] = sl_value
+#         elif data.loc[i, 'Close'] > sl_value:
+#             if atr_diff[i] > 0 and atr_close[i] > sl_value:
+#                 sl_value = atr_close[i]
+#                 data.loc[i, 'TSL'] = sl_value
+#             else:
+#                 data.loc[i, 'TSL'] = sl_value
+#         else:
+#             if atr_diff_down[i] < 0 and atr_close_down[i] < sl_value:
+#                 sl_value = atr_close_down[i]
+#                 data.loc[i, 'TSL'] = sl_value
+#             else:
+#                 data.loc[i, 'TSL'] = sl_value
+#     return data[['ATR_U', 'ATR_D', 'TSL']]
+
+
 def slope(ser, n):
     "function to calculate the slope of regression line for n consecutive points on a plot"
     #     ser = (ser - ser.min())/(ser.max() - ser.min())
@@ -94,7 +136,7 @@ def slope(ser, n):
     slope_angle = (np.rad2deg(np.arctan(np.array(slopes))))
     return slope_angle, reg_prices
 
-strategy = 'Reg_Latest_Long_Large'
+strategy = 'Reg_Latest_NIFTY_INFY'
 os.mkdir(os.path.join(os.getcwd(), strategy))
 new_path = os.path.join(os.getcwd(), strategy)
 
@@ -119,7 +161,7 @@ for stock in stocks:
         stock = 'LTFH'
     if stock == 'M&MFIN':
         stock = 'MMFIN'
-    query = "SELECT * FROM dbo." + stock + " WHERE DATE >='2014-01-01 00:00:00.000'"
+    query = "SELECT * FROM dbo." + stock + " WHERE DATE >='2014-01-01 00:00:00.000' ORDER BY DATE ASC"
     df = pd.read_sql(query,con=conn,parse_dates=True)
     df['Date'] = pd.to_datetime(df['Date'])
     # df = df[(start_date <= df['Date']) & (df['Date']<= end_date)]
@@ -137,9 +179,10 @@ for stock in stocks:
     # EMA_3 = np.round(df['Close'].ewm(span=3).mean(), 2)
     # EMA_5 = np.round(df['Close'].ewm(span=5).mean(), 2)
     # EMA_50 = np.round(df['Close'].ewm(span=50).mean(), 2)
-    EMA_10 = np.round(df['Close'].ewm(span=10).mean(), 2)
+    EMA_10 = np.round(df['Close'].ewm(span=10,min_periods=10).mean(), 2)
     # SMA_20 = np.round(df['Close'].rolling(20).mean(), 2)
-    EMA_20 = np.round(df['Close'].ewm(span=20).mean(), 2)
+    EMA_20 = np.round(df['Close'].ewm(span=20,min_periods=20).mean(), 2)
+    EMA_20_Chg = EMA_20.pct_change(10)
     EMA_200 = np.round(df['Close'].ewm(span=200).mean(), 2)
     EMA_100 = np.round(df['Close'].ewm(span=100).mean(), 2)
     EMA_50 = np.round(df['Close'].ewm(span=50).mean(), 2)
@@ -197,6 +240,7 @@ for stock in stocks:
         'EMA_200': EMA_200,
         'EMA_20': EMA_20,
         'EMA_10': EMA_10,
+        'EMA_20_Chg':EMA_20_Chg,
         # 'BB_Std': BB_Std,
         # 'BB1_Upper': BB1_Upper,
         # 'BB2_Upper': BB2_Upper,
@@ -265,7 +309,7 @@ for stock in stocks:
     df3['Cls_Abv_EMA20'] = df3['Close'] - df3['EMA_20']
     df3['Cls_Abv_EMA10'] = df3['Close'] - df3['EMA_10']
     df3['EM_Diff_Status'] =''
-    curr_support = prev_support = curr_res = prev_res = 0.0
+    ema_cnt_chk=curr_support = prev_support = curr_res = prev_res = 0.0
     df3['Support']=df3['Resistance']= df3['Curr_Supp'] = df3['Prev_Supp'] = df3['Curr_Res'] = df3['Prev_Res'] = df3['Trail_Price'] = 0.0
 
     """ Bollinger Band width calculation """
@@ -283,8 +327,8 @@ for stock in stocks:
     start_value = 100000
     available_cash = 0
     latest_value = 0
-    risk = .02
-    trail = .02
+    risk = .03
+    trail = .03
     #     print('Starting Portfolio Value : {}'.format(start_value))
     for row_index, row_data in df3.iterrows():
         k = row_index + 5
@@ -298,6 +342,13 @@ for stock in stocks:
                 df3.loc[k, 'EMA20_Sig'] = 'Cross_Abv_20EMA'
             elif df3.loc[k, 'Cls_Abv_EMA20'] < 0 and df3.loc[k - 1, 'Cls_Abv_EMA20'] >= 0:
                 df3.loc[k, 'EMA20_Sig'] = 'Cross_Blw_20EMA'
+
+            if df3.loc[k,'EMA20_Sig'] in ['Cross_Abv_20EMA','Close_GT_20EMA']:
+                ema_cnt_chk +=1
+                df3.loc[k,'EMA20_Cnt'] = ema_cnt_chk
+            if df3.loc[k,'EMA20_Sig'] in ['Cross_Blw_20EMA','Close_LT_20EMA']:
+                ema_cnt_chk =0
+                df3.loc[k, 'EMA20_Cnt'] = ema_cnt_chk
 
             df3.loc[k, 'EMA10_Sig'] = 'Close_GT_10EMA' if df3.loc[k, 'Cls_Abv_EMA10'] >= 0 else 'Close_LT_10EMA'
             if df3.loc[k, 'Cls_Abv_EMA10'] >= 0 and df3.loc[k - 1, 'Cls_Abv_EMA10'] < 0:
@@ -314,7 +365,8 @@ for stock in stocks:
             elif df3.loc[k,'Reg_Cross'] < 0 and df3.loc[k-1,'Reg_Cross'] <0:
                 df3.loc[k, 'Reg_Cross_Sig'] = 'Reg5_Blw_Reg10'
 
-            supp_cond = df3.loc[k,'Reg_5_Chg'] >= 0 and df3.loc[k-1,'Reg_5_Chg']<1 and df3.loc[k-2,'Reg_5_Chg']<1
+            # supp_cond = df3.loc[k,'Reg_5_Chg'] >= 0 and (df3.loc[k-1,'Reg_5_Chg']<0 or df3.loc[k-2,'Reg_5_Chg']<0)
+            supp_cond = df3.loc[k, 'Reg_5_Chg'] >= 0 and df3.loc[k - 1, 'Reg_5_Chg'] < 1 and df3.loc[k - 2, 'Reg_5_Chg'] < 1
             if supp_cond:
                 prev_support = curr_support
                 curr_support = df3.loc[k-1,'Reg_5']
@@ -370,6 +422,7 @@ for stock in stocks:
 
                 EMA_20_signal = df3.loc[k,'EMA20_Sig'] in ['Close_GT_20EMA','Cross_Abv_20EMA']
                 EMA_10_signal = df3.loc[k,'EMA10_Sig'] in ['Close_GT_10EMA','Cross_Abv_10EMA']
+                # EMA_10_20_cond = df3.loc[k,'EMA_10'] - df3.loc[k,'EMA_20']
                 # Cls_Abv_EMA = df3.loc[k,'Close'] >= df3.loc[k,'EMA_50']
                 Reg_5_cond = df3.loc[k,'Reg_Cross_Sig'] in ['Cross_Up','Reg5_Abv_Reg10']
                 Reg_5_chg_cond = df3.loc[k,'Reg_5_Chg'] >0
@@ -378,48 +431,160 @@ for stock in stocks:
                 supp_cond_prv1 = df3.loc[k-1, 'Support'] in supp_cond_list
                 supp_cond_prv2 = df3.loc[k-2, 'Support'] in supp_cond_list
 
-                # if EMA_10_signal and EMA_20_signal and (supp_cond_pr or supp_cond_prv1) and Reg_5_chg_cond:
+                if EMA_20_signal and (supp_cond_pr or supp_cond_prv1):
 
+                # if  df3.loc[k,'EM_Diff_Status'] == 'EM_Diff_Signal':
 
-                if  df3.loc[k,'Diff_Reg5_EM20'] >=0 and df3.loc[k-1,'Diff_Reg5_EM20'] < 0:
+                # if df3.loc[k,'Reg_5']> df3.loc[k,'EMA_20'] and df3.loc[k-1,'Reg_5']> df3.loc[k-1,'EMA_20'] and df3.loc[k,'Close']> df3.loc[k,'EMA_20'] and \
+                #     df3.loc[k-2,'Reg_5']> df3.loc[k-2,'EMA_20'] and supp_cond and df3.loc[k,'Close']> df3.loc[k,'Reg_5'] and df3.loc[k,'Close_Chg'] <= 3.5:
+
+                # if df3.loc[k, 'Diff_Reg5_EM20'] >= 0 and df3.loc[k - 1, 'Diff_Reg5_EM20'] < 0 and df3.loc[k,'Close_Chg'] <= 3:
                     """ Calculate the buy qty for available cash if strategy condition is satisfied """
                     buy_qty = floor(start_value / df3.loc[k, 'Close'])
                     """ Calculate the parameters if a Buy is executed """
                     cnt_trades += 1
                     buy_price = df3.loc[k, 'Close']
 
+                    if 100 < buy_price <= 150:
+                        risk = .03
+                        trail = .03
+                    elif 150 < buy_price <=200:
+                        risk = .025
+                        trail = .025
+                    elif buy_price > 200:
+                        risk = .03
+                        trail = .03
+                    stop_price = buy_price - np.ceil(risk * buy_price)
+                    trail_price = buy_price + trail * buy_price
+                    if buy_price <=110:
+                        stop_price = buy_price - 3
+                        trail_price = buy_price + 5
+                    risk_amt = (buy_price - stop_price) * buy_qty
                     buy_cost = buy_qty * df3.loc[k, 'Close']
+                    available_cash = start_value - buy_cost
                     position = True
+                    trail_start = False
                     df3.loc[k, 'Signal_B'] = buy_price
-                    print('Buy Date: {0[0]}, Open: {0[1]} ,High: {0[2]}, Low: {0[3]}, Close: {0[4]}'.format(df3.iloc[k, 1:6].tolist()))
+                    df3.loc[k, 'Signal_SL'] = stop_price
+            #                     print('Date: {0[0]}, Open: {0[1]} ,High: {0[2]}, Low: {0[3]}, Close: {0[4]}'.format(df3.iloc[k, 1:6].tolist()))
             #                     print('BUY EXECUTED , Qty: %d, Total Buy Cost :%.2f, Available Cash: %.2f' % (buy_qty, buy_cost, available_cash))
             #                     print('Buy Price: {0:.2f}, Stop Price: {1:.2f}'.format(buy_price, stop_price))
             #                     print('=====================================================================')
             else:
 
                 """ Sell below the STOP LOSS in case if GAP DOWN in Open Price """
-                if df3.loc[k,'Diff_Reg5_EM20'] <=0 and df3.loc[k-1,'Diff_Reg5_EM20'] > 0:
+                if (df3.loc[k, 'Open'] < stop_price) and position and not trail_start:
+                    stop_price = df3.loc[k, 'Open']
+                    #                     print('Date: {0[0]}, Open: {0[1]} ,High: {0[2]}, Low: {0[3]}, Close: {0[4]}'.format(df3.iloc[k, 1:6].tolist()))
+                    #                     print('SELL AT GAP DOWN STOP PRICE, %.2f, Sell Qty, %d' % (stop_price,buy_qty))
+                    risk_amt = (buy_price - stop_price) * buy_qty
+                    start_value = start_value - risk_amt - (.00206 * buy_cost)  # Brokerage Cost is considered too
+                    loss_trades += 1
+                    position = False
+                    df3.loc[k, 'Signal_SL'] = stop_price
+                    df3.loc[k, 'PnL'] = -risk_amt
+                    df3.loc[k, 'Present_Value'] = start_value
+                    #                     print('LOSS: - %.2f , Latest Position Value: %.2f' % (risk_amt, start_value))
+                    #                     print('*******************************************************************')
+                    continue
 
-                    sell_price = df3.loc[k, 'Close']
-                    pnl = (sell_price - buy_price)*buy_qty
-                    print('Sell Date: {0[0]}, Open: {0[1]} ,High: {0[2]}, Low: {0[3]}, Close: {0[4]}'.format(df3.iloc[k, 1:6].tolist()))
-                    start_value = start_value + pnl  # Brokerage Cost is considered too
-                    if pnl >0 :
-                        profit_trades +=1
+                    """ Sell at Stop Loss Limit Price """
+                if (df3.loc[k, 'Low'] < stop_price < df3.loc[k, 'High'] and position and not trail_start):
+                    #                     print('Date: {0[0]}, Open: {0[1]} ,High: {0[2]}, Low: {0[3]}, Close: {0[4]}'.format(df3.iloc[k, 1:6].tolist()))
+                    #                     print('SELL AT STOP PRICE, %.2f, Sell Qty, %d' % (stop_price,buy_qty))
+                    start_value = start_value - risk_amt - (.00206 * buy_cost)  # Brokerage Cost is considered too
+                    position = False
+                    loss_trades += 1
+                    df3.loc[k, 'Signal_SL'] = stop_price
+                    df3.loc[k, 'PnL'] = -risk_amt
+                    df3.loc[k, 'Present_Value'] = start_value
+                    #                     print('LOSS: - %.2f , Latest Position Value: %.2f' % (risk_amt, start_value))
+                    #                     print('*******************************************************************')
+                    continue
+
+                    """ Target Price based on ATR Trailing Stop Loss """
+                if (df3.loc[k, 'Close'] < trail_price and stop_price < df3.loc[k,'Close'] and position and not trail_start):
+                    #                     print('cond1',df3.loc[k, 'Close'], df3.loc[k-1, 'Close'],df3.loc[k, 'Date'],trail_price)
+                    continue
+
+                if (df3.loc[k, 'Low'] > trail_price and df3.loc[k, 'Close'] < df3.loc[k-1,'Close'] and position and trail_start):
+                    #                     print('cond2',df3.loc[k, 'Close'], df3.loc[k-1, 'Close'],df3.loc[k, 'Date'],trail_price)
+                    continue
+
+                if (df3.loc[k, 'Open'] < trail_price and position and trail_start):
+                    target_price = df3.loc[k, 'Open']
+                    #                     print('Date: {0[0]}, Open: {0[1]} ,High: {0[2]}, Low: {0[3]}, Close: {0[4]}'.format(df3.iloc[k, 1:6].tolist()))
+                    #                     print('SELL AT GAPDOWN TRAILING TARGET, %.2f, Sell Qty, %d' % (target_price,buy_qty))
+                    tgt_amt = ((target_price - buy_price) * buy_qty) - (.00212 * buy_cost)
+                    start_value = start_value + tgt_amt
+                    position = False
+                    if tgt_amt >= 0:
+                        profit_trades += 1
                     else:
                         loss_trades += 1
-                    position = False
-                    df3.loc[k, 'Signal_SL'] = sell_price
-                    df3.loc[k, 'PnL'] = pnl
+                    df3.loc[k, 'Signal_SP'] = target_price
+                    df3.loc[k, 'PnL'] = tgt_amt
                     df3.loc[k, 'Present_Value'] = start_value
+                #                     print('PROFIT: + %.2f , Latest Position Value: %.2f' % (tgt_amt, start_value))
+                #                     print('*******************************************************************')
 
+                if (df3.loc[k, 'High'] > trail_price > df3.loc[k, 'Low'] and position and trail_start):
+                    target_price = trail_price
+                    #                     print('Date: {0[0]}, Open: {0[1]} ,High: {0[2]}, Low: {0[3]}, Close: {0[4]}'.format(df3.iloc[k, 1:6].tolist()))
+                    #                     print('SELL AT TRAILING TARGET, %.2f, Sell Qty, %d' % (target_price,buy_qty))
+                    tgt_amt = ((target_price - buy_price) * buy_qty) - (.00212 * buy_cost)
+                    start_value = start_value + tgt_amt
+                    position = False
+                    if tgt_amt >= 0:
+                        profit_trades += 1
+                    else:
+                        loss_trades += 1
+                    df3.loc[k, 'Signal_SP'] = target_price
+                    df3.loc[k, 'PnL'] = tgt_amt
+                    df3.loc[k, 'Present_Value'] = start_value
+                #                     print('PROFIT: + %.2f , Latest Position Value: %.2f' % (tgt_amt, start_value))
+                #                     print('*******************************************************************')
+
+                if (df3.loc[k, 'Close'] > trail_price and position):
+                    if not trail_start:
+                        trail_start = True
+                        trail_price = buy_price - trail_price * .01
+                        price_diff = round((df3.loc[k, 'Close'] - trail_price)/trail_price,1)
+                        if 4 <= price_diff <= .05:
+                            if 100 < df3.loc[k, 'Close'] <= 150:
+                                trail_price = df3.loc[k, 'Close']  - np.ceil(df3.loc[k, 'Close'] * .04)
+                            elif 150 < df3.loc[k, 'Close'] <= 200:
+                                trail_price = df3.loc[k, 'Close']  - np.ceil(df3.loc[k, 'Close'] * .035)
+                            elif df3.loc[k, 'Close'] <100:
+                                trail_price = df3.loc[k, 'Close'] - 3
+                            else:
+                                trail_price = df3.loc[k, 'Close'] - np.ceil(df3.loc[k, 'Close'] * .03)
+                        elif price_diff > .05:
+                            if 100 < df3.loc[k, 'Close'] <= 150:
+                                trail_price = df3.loc[k, 'Close'] - np.ceil(df3.loc[k, 'Close'] * .035)
+                            elif 150 < df3.loc[k, 'Close'] <= 200:
+                                trail_price = df3.loc[k, 'Close'] - np.ceil(df3.loc[k, 'Close'] * .03)
+                            elif df3.loc[k, 'Close'] < 100:
+                                trail_price = df3.loc[k, 'Close'] - 3
+                            else:
+                                trail_price = df3.loc[k, 'Close'] - np.ceil(df3.loc[k, 'Close'] * .02)
+                        df3.loc[k,'Trail_Price'] = trail_price
+
+                    #                         print('Trail Started at {0}'.format(trail_price))
+                    #                         print( df3.loc[k, 'Close'], df3.loc[k-1, 'Close'],df3.loc[k, 'Date'])
+                    elif df3.loc[k, 'Low'] > trail_price and df3.loc[k, 'Close'] > df3.loc[k - 1, 'Close']:
+                        #                         print( df3.loc[k, 'Close'], df3.loc[k-1, 'Close'],df3.loc[k, 'Date'])
+                        new_trail = df3.loc[k, 'Close'] - np.ceil(trail_price * .02)
+                        if trail_price < new_trail:
+                            trail_price = new_trail
+                            df3.loc[k, 'Trail_Price'] = trail_price
         #                         print('Trail Set to {0}'.format(trail_price))
         df3.loc[k, 'Trade_Count'] = cnt_trades
         df3.loc[k, 'Profit_Trades'] = profit_trades
         df3.loc[k, 'Loss_Trades'] = loss_trades
         df3.loc[k, 'Portfolio_Value'] = round(start_value, 2)
 
-    df7 = df3[['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'Close_Chg', 'Reg_5', 'Reg_10', 'EMA_20','EM_Diff_By_ATR','Curr_Supp','Prev_Supp','Curr_Res','Prev_Res','Signal_B',
+    df7 = df3[['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'Close_Chg', 'Reg_5', 'Reg_10', 'EMA_20','EMA20_Cnt','EMA_20_Chg','EM_Diff_By_ATR','Curr_Supp','Prev_Supp','Curr_Res','Prev_Res','Signal_B',
                'Signal_SL','Trail_Price','Signal_SP', 'PnL', 'Present_Value','Support','EMA20_Sig','Reg_Cross_Sig','Fib_Status']]
 
     df7.to_csv(os.path.join(new_path, "Results_" + stock + ".csv"), index=False)
@@ -430,7 +595,8 @@ for stock in stocks:
     no_of_trades = df8['Trade_Count'].values[0] if df8['Trade_Count'].values[0] > 0 else 1000
     df8['Win_Loss_Perc'] = round(df8['Profit_Trades'].values[0] / no_of_trades, 2) * 100
     df8['P/L_Perc'] = round((df8['Portfolio_Value'].values[0] - 100000) / 100000, 2) * 100
+    df8['Pft_Per_Trd'] = round((df8['P/L_Perc'].values[0] ) / df8['Trade_Count'].values[0], 2) * 100
     df6 = df6.append(df8)
 
-df6.sort_values(by='Symbol').to_csv(os.path.join(new_path, "Results_Overall_" + strategy + ".csv"), index=False)
+df6.sort_values(by='P/L_Perc',ascending=False).to_csv(os.path.join(new_path, "Results_Overall_" + strategy + ".csv"), index=False)
 print('Total Time Taken : {} ' .format(dt.datetime.now() - start_time))

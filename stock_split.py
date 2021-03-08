@@ -2,9 +2,9 @@ import pandas as pd
 import datetime as dt
 import yfinance as yf
 
-prices=pd.read_csv("Stock_Symbol_Mid50.csv")
+prices=pd.read_csv("Stock_Symbol_NXT50.csv")
 stocks = prices['Symbol'].tolist()
-start_date = dt.date(2007,1,1)
+start_date = dt.date(2020,5,1)
 end_date = dt.date.today()
 stk_split_data = pd.DataFrame()
 
@@ -18,4 +18,4 @@ for stock in stocks:
     stk_split_data = stk_split_data.append(split_data)
     print(split_data)
 
-stk_split_data.to_csv('Stock_SplitData_Mid50.csv',index=False)
+stk_split_data.to_csv('Stock_Split2020_NXT50.csv',index=False)

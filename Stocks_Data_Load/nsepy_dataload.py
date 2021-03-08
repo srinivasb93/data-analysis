@@ -10,12 +10,12 @@ from nsepy import get_history
 startdate = dt.date(2007,1,1)
 enddate = dt.date.today()
 
-split_df = pd.read_csv("StockSplit_Data.csv")
-prices=pd.read_csv('Stock_Symbol_Mid50.csv')
+split_df = pd.read_csv("../Stock_SplitData_N50.csv")
+#prices=pd.read_csv('Stock_Symbol_Mid50.csv')
 #prices=pd.read_csv('Nifty_Midcap_50.csv')
 # prices=pd.read_csv('Nifty_Next_50.csv')
 # stocks = prices['Symbol'].tolist()
-stocks = ['M&MFIN']
+stocks = ['AMBUJACEM']
 
 split_count_dict = dict(split_df['Stock'].value_counts())
 split_stocks_list = split_df['Stock'].unique().tolist()
@@ -68,12 +68,12 @@ for stock in stocks:
     # df.fillna('',inplace=True)
     print("Start Data Load for the stock : {}".format(stock))
     #Write data read from .csv to SQL Server table
-    # if stock == 'BAJAJ-AUTO':
-    #     stock = 'BAJAJAUTO'
-    # if stock == 'M&M':
-    #     stock = 'MM'
-    # if stock == 'MCDOWELL-N':
-    #     stock = 'MCDOWELL'
+    if stock == 'BAJAJ-AUTO':
+        stock = 'BAJAJAUTO'
+    if stock == 'M&M':
+        stock = 'MM'
+    if stock == 'MCDOWELL-N':
+        stock = 'MCDOWELL'
     if stock == 'L&TFH':
         stock = 'LTFH'
     if stock == 'M&MFIN':
