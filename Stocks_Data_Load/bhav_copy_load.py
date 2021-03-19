@@ -1,7 +1,7 @@
 import nsepy
 from nsepy import get_history
 from datetime import date
-today_dt = date(2021,3,5)
+today_dt = date(2021,3,9)
 import sqlalchemy as sa
 import urllib.parse
 
