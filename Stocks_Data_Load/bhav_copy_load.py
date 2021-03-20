@@ -35,3 +35,4 @@ bcopy_indices = nsepy.history.get_indices_price_list(dt=today_dt)
 bcopy_indices.to_sql(name='BHAVCOPY_INDICES',con=conn,if_exists='replace',index=False)
 
 print('Bhav Copy extraction and data load is complete')
+
