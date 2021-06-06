@@ -1,5 +1,6 @@
 import pandas as pd
 import sqlalchemy as sa
+from sqlalchemy import Date
 import datetime as dt
 import pyodbc
 import urllib
@@ -8,7 +9,7 @@ import yfinance as yf
 from nsepy import get_history
 import numpy as np
 
-bhavdate = dt.date(2021,3,5)
+bhavdate = dt.date(2021,3,8)
 
 
 # split_df = pd.read_csv(r"C:\Users\admin\PycharmProjects\My Projects\PyTrain\StockSplit_Data1.csv")
@@ -51,7 +52,7 @@ df_today = data.loc[:, ['NAME','TIMESTAMP','OPEN', 'HIGH', 'LOW', 'CLOSE', 'TOTT
 df_today.rename(columns={'TIMESTAMP':'Date','OPEN': 'Open', 'HIGH': 'High', 'LOW': 'Low', 'CLOSE': 'Close',
                                  'TOTTRDQTY': 'Volume'}, inplace=True)
 df_today.set_index('NAME',inplace=True)
-df_today['Date'] = pd.to_datetime(df_today['Date'])
+df_today['Date'] = pd.to_datetime(df_today['Date'],format="%d-%m-%Y")
 
 for stock in stocks:
     stock = stock[0]
@@ -112,7 +113,7 @@ for stock in stocks:
     print("Start Data Load for the Index : {}".format(stock))
 
     #Write data read from .csv to SQL Server table
-    data_to_add.to_sql(name=stock,con=conn,if_exists='append',index=False)
+    data_to_add.to_sql(name=stock,con=conn,if_exists='append',index=False,dtype={'Date': Date})
     print("Data Load done for the Index : {}".format(stock))
 #Read data from a SQL server table
 # df1=pd.read_sql_table('STOCK_DATA',con=conn)

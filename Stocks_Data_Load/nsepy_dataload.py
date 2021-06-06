@@ -10,12 +10,12 @@ from nsepy import get_history
 startdate = dt.date(2007,1,1)
 enddate = dt.date.today()
 
-split_df = pd.read_csv("../Stock_SplitData_N50.csv")
+split_df = pd.read_csv("../Stock_SplitData_Mid50.csv")
 #prices=pd.read_csv('Stock_Symbol_Mid50.csv')
 #prices=pd.read_csv('Nifty_Midcap_50.csv')
 # prices=pd.read_csv('Nifty_Next_50.csv')
 # stocks = prices['Symbol'].tolist()
-stocks = ['AMBUJACEM']
+stocks = ['M&MFIN']
 
 split_count_dict = dict(split_df['Stock'].value_counts())
 split_stocks_list = split_df['Stock'].unique().tolist()

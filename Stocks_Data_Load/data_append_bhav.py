@@ -42,12 +42,17 @@ query = "SELECT NAME FROM dbo.STOCKS"
 stocks_data = conn.execute(query)
 stocks = stocks_data.fetchall()
 
+
 #stocks = ['MM']
 
 bhav_query = "SELECT * FROM dbo.BHAVCOPY"
 data = pd.read_sql_query(bhav_query, con=conn, parse_dates=True)
 
+print(data.head())
+
 df_today = data.loc[:, ['SYMBOL','TIMESTAMP','OPEN', 'HIGH', 'LOW', 'CLOSE', 'TOTTRDQTY']]
+print(df_today.head())
+exit()
 df_today.rename(columns={'TIMESTAMP':'Date','OPEN': 'Open', 'HIGH': 'High', 'LOW': 'Low', 'CLOSE': 'Close',
                                  'TOTTRDQTY': 'Volume'}, inplace=True)
 df_today.set_index('SYMBOL',inplace=True)

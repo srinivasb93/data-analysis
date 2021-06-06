@@ -19,7 +19,8 @@ params = urllib.parse.quote_plus("DRIVER={SQL Server Native Client 11.0};"
                                  "UID=user;"
                                  "PWD=password")
 '''
-
+print(today_dt)
+exit()
 #Connection String
 engine = sa.create_engine("mssql+pyodbc:///?odbc_connect={}".format(params))
 
